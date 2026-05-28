@@ -60,38 +60,76 @@ if(isset($_POST['login'])){
 
     <title>Login</title>
 
+    <link 
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet">
+
 </head>
-<body>
 
-    <h2>User Login</h2>
+<body class="bg-light">
 
-    <form method="POST">
+    <div class="container mt-5">
 
-        <input 
-            type="text"
-            name="username"
-            placeholder="Enter Username"
-        >
+        <div class="row justify-content-center">
 
-        <br><br>
+            <div class="col-md-4">
 
-        <input 
-            type="password"
-            name="password"
-            placeholder="Enter Password"
-        >
+                <div class="card shadow p-4">
 
-        <br><br>
+                    <h2 class="text-center text-primary">
+                        User Login
+                    </h2>
 
-        <button type="submit" name="login">
-            Login
-        </button>
+                    <hr>
 
-    </form>
+                    <form method="POST">
 
-    <br>
+                        <input 
+                        type="text"
+                        name="username"
+                        class="form-control"
+                        placeholder="Enter Username"
+                        required>
 
-    <?php echo $message; ?>
+                        <br>
+
+                        <input 
+                        type="password"
+                        name="password"
+                        class="form-control"
+                        placeholder="Enter Password"
+                        required>
+
+                        <br>
+
+                        <button 
+                        type="submit"
+                        name="login"
+                        class="btn btn-primary w-100">
+
+                            Login
+
+                        </button>
+
+                    </form>
+
+                    <br>
+
+                    <p class="text-danger text-center">
+                        <?php echo $message; ?>
+                    </p>
+
+                    <a href="register.php">
+                        Create New Account
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </body>
 </html>

@@ -1,5 +1,8 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once '../classes/Database.php';
 require_once '../classes/Encryption.php';
 
@@ -8,11 +11,12 @@ $message = "";
 if(isset($_POST['register'])){
 
     $username = trim($_POST['username']);
+
     $password = trim($_POST['password']);
 
     if(!empty($username) && !empty($password)){
 
-        // Hash login password
+        // Hash user login password
         $hashedPassword = password_hash(
             $password,
             PASSWORD_DEFAULT
@@ -21,7 +25,7 @@ if(isset($_POST['register'])){
         // Generate unique AES key
         $userKey = openssl_random_pseudo_bytes(32);
 
-        // Encrypt the AES key using user password
+        // Encrypt AES key using login password
         $encryptedKey = Encryption::encrypt(
             base64_encode($userKey),
             $password
@@ -29,28 +33,44 @@ if(isset($_POST['register'])){
 
         // Database connection
         $db = new Database();
+
         $conn = $db->connect();
 
-        // Insert user
-        $sql = "INSERT INTO users 
-        (username, password_hash, encrypted_key)
-        VALUES (?, ?, ?)";
+        // Check if username already exists
+        $checkSql = "SELECT id FROM users WHERE username = ?";
 
-        $stmt = $conn->prepare($sql);
+        $checkStmt = $conn->prepare($checkSql);
 
-        $result = $stmt->execute([
-            $username,
-            $hashedPassword,
-            $encryptedKey
-        ]);
+        $checkStmt->execute([$username]);
 
-        if($result){
+        if($checkStmt->rowCount() > 0){
 
-            $message = "Registration Successful";
+            $message = "Username already exists";
 
         } else {
 
-            $message = "Registration Failed";
+            // Insert new user
+            $sql = "INSERT INTO users
+            (username, password_hash, encrypted_key)
+            VALUES (?, ?, ?)";
+
+            $stmt = $conn->prepare($sql);
+
+            $result = $stmt->execute([
+                $username,
+                $hashedPassword,
+                $encryptedKey
+            ]);
+
+            if($result){
+
+                $message = "Registration Successful";
+
+            } else {
+
+                $message = "Registration Failed";
+
+            }
 
         }
 
@@ -68,40 +88,86 @@ if(isset($_POST['register'])){
 <html>
 <head>
 
-    <title>Register</title>
+    <title>User Registration</title>
+
+    <link 
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet">
 
 </head>
-<body>
 
-    <h2>User Registration</h2>
+<body class="bg-light">
 
-    <form method="POST">
+    <div class="container mt-5">
 
-        <input 
-            type="text" 
-            name="username"
-            placeholder="Enter Username"
-        >
+        <div class="row justify-content-center">
 
-        <br><br>
+            <div class="col-md-5">
 
-        <input 
-            type="password"
-            name="password"
-            placeholder="Enter Password"
-        >
+                <div class="card shadow p-4">
 
-        <br><br>
+                    <h2 class="text-center text-primary">
+                        User Registration
+                    </h2>
 
-        <button type="submit" name="register">
-            Register
-        </button>
+                    <hr>
 
-    </form>
+                    <form method="POST">
 
-    <br>
+                        <label>Username</label>
 
-    <?php echo $message; ?>
+                        <input 
+                        type="text"
+                        name="username"
+                        class="form-control"
+                        placeholder="Enter Username"
+                        required>
+
+                        <br>
+
+                        <label>Password</label>
+
+                        <input 
+                        type="password"
+                        name="password"
+                        class="form-control"
+                        placeholder="Enter Password"
+                        required>
+
+                        <br>
+
+                        <button 
+                        type="submit"
+                        name="register"
+                        class="btn btn-success w-100">
+
+                            Register
+
+                        </button>
+
+                    </form>
+
+                    <br>
+
+                    <p class="text-center text-danger">
+                        <?php echo $message; ?>
+                    </p>
+
+                    <div class="text-center">
+
+                        <a href="login.php">
+                            Already have an account? Login
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </body>
 </html>
