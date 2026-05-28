@@ -10,9 +10,12 @@ if(!isset($_SESSION['user_id'])){
 
 }
 
+require_once '../classes/Database.php';
 require_once '../classes/PasswordGenerator.php';
+require_once '../classes/Encryption.php';
 
 $generatedPassword = "";
+$message = "";
 
 if(isset($_POST['generate'])){
 
@@ -32,13 +35,79 @@ if(isset($_POST['generate'])){
 
 }
 
+if(isset($_POST['save'])){
+
+    $website = trim($_POST['website']);
+
+    $password = trim($_POST['password']);
+
+    $loginPassword = trim($_POST['login_password']);
+
+    $db = new Database();
+
+    $conn = $db->connect();
+
+    // Get user encrypted key
+    $sql = "SELECT encrypted_key FROM users WHERE id = ?";
+
+    $stmt = $conn->prepare($sql);
+
+    $stmt->execute([$_SESSION['user_id']]);
+
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Decrypt user AES key
+    $userKey = Encryption::decrypt(
+        $user['encrypted_key'],
+        $loginPassword
+    );
+
+    if($userKey){
+
+        // Encrypt password before saving
+        $encryptedPassword = Encryption::encrypt(
+            $password,
+            $userKey
+        );
+
+        // Save into database
+        $insert = "INSERT INTO passwords
+        (user_id, website_name, encrypted_password)
+        VALUES (?, ?, ?)";
+
+        $insertStmt = $conn->prepare($insert);
+
+        $result = $insertStmt->execute([
+            $_SESSION['user_id'],
+            $website,
+            $encryptedPassword
+        ]);
+
+        if($result){
+
+            $message = "Password Saved Successfully";
+
+        } else {
+
+            $message = "Failed To Save Password";
+
+        }
+
+    } else {
+
+        $message = "Wrong Login Password";
+
+    }
+
+}
+
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
 
-    <title>Password Generator</title>
+    <title>Password Manager</title>
 
 </head>
 <body>
@@ -49,41 +118,25 @@ if(isset($_POST['generate'])){
 
         <label>Uppercase Letters:</label>
 
-        <input 
-            type="number"
-            name="uppercase"
-            required
-        >
+        <input type="number" name="uppercase" required>
 
         <br><br>
 
         <label>Lowercase Letters:</label>
 
-        <input 
-            type="number"
-            name="lowercase"
-            required
-        >
+        <input type="number" name="lowercase" required>
 
         <br><br>
 
         <label>Numbers:</label>
 
-        <input 
-            type="number"
-            name="numbers"
-            required
-        >
+        <input type="number" name="numbers" required>
 
         <br><br>
 
         <label>Special Characters:</label>
 
-        <input 
-            type="number"
-            name="special"
-            required
-        >
+        <input type="number" name="special" required>
 
         <br><br>
 
@@ -93,15 +146,52 @@ if(isset($_POST['generate'])){
 
     </form>
 
+    <br><br>
+
+    <h3>Generated Password</h3>
+
+    <form method="POST">
+
+        <label>Website Name:</label>
+
+        <input 
+            type="text"
+            name="website"
+            required
+        >
+
+        <br><br>
+
+        <label>Password:</label>
+
+        <input 
+            type="text"
+            name="password"
+            value="<?php echo $generatedPassword; ?>"
+            required
+        >
+
+        <br><br>
+
+        <label>Your Login Password:</label>
+
+        <input 
+            type="password"
+            name="login_password"
+            required
+        >
+
+        <br><br>
+
+        <button type="submit" name="save">
+            Save Password
+        </button>
+
+    </form>
+
     <br>
 
-    <h3>Generated Password:</h3>
-
-    <input 
-        type="text"
-        value="<?php echo $generatedPassword; ?>"
-        readonly
-    >
+    <?php echo $message; ?>
 
     <br><br>
 

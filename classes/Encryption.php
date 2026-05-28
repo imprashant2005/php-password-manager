@@ -20,9 +20,14 @@ class Encryption {
 
     public static function decrypt($data, $password) {
 
-        $parts = explode('::', base64_decode($data), 2);
+        $parts = explode(
+            '::',
+            base64_decode($data),
+            2
+        );
 
         $iv = $parts[0];
+
         $encrypted_data = $parts[1];
 
         return openssl_decrypt(
