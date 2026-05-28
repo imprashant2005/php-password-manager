@@ -27,7 +27,19 @@ if(!isset($_SESSION['user_id'])){
         <?php echo $_SESSION['username']; ?>
     </h2>
 
-    <br>
+    <br><br>
+
+    <a href="add_password.php">
+        Generate Password
+    </a>
+
+    <br><br>
+
+    <a href="view_passwords.php">
+        View Saved Passwords
+    </a>
+
+    <br><br>
 
     <a href="../auth/logout.php">
         Logout
